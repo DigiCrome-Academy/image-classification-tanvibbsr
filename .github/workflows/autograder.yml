@@ -1,0 +1,91 @@
+name: Autograder
+
+# Triggered on every push so students get immediate feedback.
+# NOTE: The autograder does NOT run `dvc pull` because:
+#   1. All tests use synthetic/mock data — no real X-ray images are needed.
+#   2. CI runners do not have Google Drive credentials.
+# Students must verify dataset integrity locally with `dvc status`.
+
+on:
+  push:
+    branches: ["**"]
+  pull_request:
+    branches: ["main"]
+
+jobs:
+  grade:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python 3.10
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.10"
+
+      - name: Cache pip packages
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/pip
+          key: ${{ runner.os }}-pip-${{ hashFiles('requirements.txt') }}
+          restore-keys: ${{ runner.os }}-pip-
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      - name: Create results directory
+        run: mkdir -p results
+
+      # ── Phase 1 ────────────────────────────────────────────────────────
+      - name: "Phase 1 — Baseline MLP"
+        id: phase1
+        run: |
+          pytest tests/test_phase1.py -v \
+            --tb=short \
+            --junitxml=results/phase1.xml \
+            --cov=src --cov-report=term-missing
+        continue-on-error: true
+
+      # ── Phase 2 ────────────────────────────────────────────────────────
+      - name: "Phase 2 — Advanced Neural Network"
+        id: phase2
+        run: |
+          pytest tests/test_phase2.py -v \
+            --tb=short \
+            --junitxml=results/phase2.xml
+        continue-on-error: true
+
+      # ── Phase 3 ────────────────────────────────────────────────────────
+      - name: "Phase 3 — Transfer Learning"
+        id: phase3
+        run: |
+          pytest tests/test_phase3.py -v \
+            --tb=short \
+            --junitxml=results/phase3.xml
+        continue-on-error: true
+
+      # ── Phase 4 ────────────────────────────────────────────────────────
+      - name: "Phase 4 — Optimisation & Analysis"
+        id: phase4
+        run: |
+          pytest tests/test_phase4.py -v \
+            --tb=short \
+            --junitxml=results/phase4.xml
+        continue-on-error: true
+
+      # ── Score summary ───────────────────────────────────────────────────
+      - name: Grade summary
+        run: |
+          python .github/scripts/grade_summary.py \
+            results/phase1.xml results/phase2.xml \
+            results/phase3.xml results/phase4.xml
+
+      - name: Upload test results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-results
+          path: results/

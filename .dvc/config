@@ -1,0 +1,5 @@
+[core]
+    remote = classroom-storage
+    autostage = true
+['remote "classroom-storage"']
+    url = gdrive://REPLACE_WITH_GDRIVE_FOLDER_ID

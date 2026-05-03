@@ -1,0 +1,36 @@
+# ── Dataset (managed by DVC — never commit raw images) ──────────────────────
+# The actual image folders are ignored here AND by data/.gitignore (created by DVC).
+# Only data/chest_xray.dvc (the pointer file) should ever be committed.
+data/chest_xray/
+data/*.zip
+data/*.tar.gz
+
+# Saved models (commit selectively)
+models/*.keras
+models/*.h5
+models/saved_model/
+
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.eggs/
+dist/
+build/
+venv/
+.venv/
+*.ipynb_checkpoints/
+.ipynb_checkpoints/
+
+# Test artifacts
+results/
+.coverage
+htmlcov/
+.pytest_cache/
+
+# TensorBoard logs
+logs/
+
+# OS
+.DS_Store
+Thumbs.db

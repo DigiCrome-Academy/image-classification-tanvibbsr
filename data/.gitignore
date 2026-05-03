@@ -1,0 +1,6 @@
+# This file is managed by DVC.
+# It tells git to ignore the raw image folder so images are never committed.
+# The pointer file (chest_xray.dvc) in this directory IS committed to git.
+/chest_xray
+/*.zip
+/*.tar.gz

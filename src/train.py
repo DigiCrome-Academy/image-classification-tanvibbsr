@@ -1,0 +1,130 @@
+"""
+Training utilities — callbacks, schedules, and the main training loop.
+Students implement the TODO sections; the rest is scaffolding.
+"""
+
+import os
+from pathlib import Path
+import tensorflow as tf
+from tensorflow import keras
+
+
+CHECKPOINT_DIR = Path("models")
+
+
+# ── TODO 9 ───────────────────────────────────────────────────────────────────
+def get_callbacks(
+    model_name: str = "model",
+    checkpoint_dir: Path = CHECKPOINT_DIR,
+    patience: int = 5,
+    monitor: str = "val_loss",
+) -> list:
+    """
+    Build and return a list of Keras callbacks for training.
+
+    Required callbacks:
+        1. ModelCheckpoint — save the best model to
+           checkpoint_dir / f"{model_name}_best.keras"
+           with save_best_only=True, monitor=monitor.
+        2. EarlyStopping — stop training when monitor does not improve
+           for `patience` epochs; restore_best_weights=True.
+        3. ReduceLROnPlateau — reduce LR by factor=0.5 when monitor
+           plateaus for patience//2 epochs; min_lr=1e-7.
+        4. TensorBoard — log to logs/{model_name}/.
+
+    Args:
+        model_name:     Base name used for file paths.
+        checkpoint_dir: Directory to save checkpoints.
+        patience:       Early-stopping patience (epochs).
+        monitor:        Metric to monitor ('val_loss' or 'val_accuracy').
+
+    Returns:
+        List of keras.callbacks.Callback
+    """
+    checkpoint_dir.mkdir(parents=True, exist_ok=True)
+    # ── YOUR CODE STARTS HERE ─────────────────────────────────────────────
+    raise NotImplementedError("TODO 9: implement get_callbacks()")
+    # ── YOUR CODE ENDS HERE ───────────────────────────────────────────────
+
+
+# ── TODO 10 ──────────────────────────────────────────────────────────────────
+def get_lr_schedule(
+    schedule_type: str = "cosine",
+    initial_lr: float = 1e-3,
+    epochs: int = 30,
+) -> keras.callbacks.LearningRateScheduler:
+    """
+    Return a LearningRateScheduler callback.
+
+    Implement at least TWO of the following schedules selectable via
+    schedule_type:
+        'step'    — halve LR every 10 epochs.
+        'cosine'  — cosine annealing from initial_lr to 0.
+        'warmup'  — linear warm-up for 5 epochs then cosine decay.
+
+    Args:
+        schedule_type: One of 'step', 'cosine', 'warmup'.
+        initial_lr:    Starting learning rate.
+        epochs:        Total training epochs (used by cosine schedule).
+
+    Returns:
+        keras.callbacks.LearningRateScheduler
+    """
+    # ── YOUR CODE STARTS HERE ─────────────────────────────────────────────
+    raise NotImplementedError("TODO 10: implement get_lr_schedule()")
+    # ── YOUR CODE ENDS HERE ───────────────────────────────────────────────
+
+
+# ── TODO 11 ──────────────────────────────────────────────────────────────────
+def train_model(
+    model: keras.Model,
+    train_data,
+    val_data,
+    epochs: int = 30,
+    class_weights: dict = None,
+    callbacks: list = None,
+) -> keras.callbacks.History:
+    """
+    Train `model` and return the History object.
+
+    Tasks:
+        1. Call model.fit() with train_data, validation_data=val_data,
+           epochs=epochs, class_weight=class_weights, callbacks=callbacks.
+        2. Return the History object for later plotting.
+
+    Args:
+        model:         Compiled keras.Model.
+        train_data:    Training generator or tf.data.Dataset.
+        val_data:      Validation generator or tf.data.Dataset.
+        epochs:        Number of training epochs.
+        class_weights: Optional dict for imbalanced datasets.
+        callbacks:     List of Keras callbacks.
+
+    Returns:
+        keras.callbacks.History
+    """
+    # ── YOUR CODE STARTS HERE ─────────────────────────────────────────────
+    raise NotImplementedError("TODO 11: implement train_model()")
+    # ── YOUR CODE ENDS HERE ───────────────────────────────────────────────
+
+
+def plot_history(history: keras.callbacks.History, title: str = "Training") -> None:
+    """
+    Plot accuracy and loss curves side by side.
+    Already implemented — do not modify.
+    """
+    import matplotlib.pyplot as plt
+
+    fig, axes = plt.subplots(1, 2, figsize=(14, 5))
+    for ax, metric, val_metric in zip(
+        axes,
+        ["accuracy", "loss"],
+        ["val_accuracy", "val_loss"],
+    ):
+        ax.plot(history.history.get(metric, []), label="Train")
+        ax.plot(history.history.get(val_metric, []), label="Val")
+        ax.set_title(f"{title} — {metric}")
+        ax.set_xlabel("Epoch")
+        ax.legend()
+    plt.tight_layout()
+    plt.show()

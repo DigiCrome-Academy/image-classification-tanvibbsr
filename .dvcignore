@@ -1,0 +1,8 @@
+# Patterns here are ignored by DVC when hashing tracked directories.
+# Syntax is the same as .gitignore.
+.ipynb_checkpoints
+__pycache__
+*.pyc
+*.pyo
+.DS_Store
+Thumbs.db
