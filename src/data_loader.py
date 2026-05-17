@@ -35,6 +35,7 @@ CLASS_NAMES = ["NORMAL", "PNEUMONIA"]
 
 
 # ── TODO 1 ───────────────────────────────────────────────────────────────────
+from pathlib import Path
 def get_data_generators(
     data_dir: str | Path = DATA_DIR,
     img_size: tuple = IMG_SIZE,
@@ -66,9 +67,39 @@ def get_data_generators(
         (train_generator, val_generator, test_generator)
     """
     # ── YOUR CODE STARTS HERE ─────────────────────────────────────────────
-    raise NotImplementedError("TODO 1: implement get_data_generators()")
-    # ── YOUR CODE ENDS HERE ───────────────────────────────────────────────
+    data_dir = Path(data_dir)
+    #Train generator with augmentation
+    train_datagen = ImageDataGenerator(rescale=1./255, horizontal_flip=True, rotation_range=10, zoom_range=0.1, width_shift_range=0.1, height_shift_range=0.1)
+    train_generator = train_datagen.flow_from_directory(
+       data_dir / "train",
+       target_size=img_size,
+       batch_size=batch_size,
+       class_mode='binary',
+       seed=SEED
+    )
 
+    # Validation and test generators without augmentation
+    val_datagen = ImageDataGenerator(rescale=1./255)
+
+    val_generator = val_datagen.flow_from_directory(
+        data_dir / "test",
+        target_size=img_size,
+        batch_size=batch_size,
+        class_mode='binary',
+        seed=SEED
+    )
+
+    test_datagen = ImageDataGenerator(rescale=1./255)
+    test_generator = test_datagen.flow_from_directory(
+       data_dir / "test",
+       target_size=img_size,
+       batch_size=batch_size,
+       class_mode='binary',
+       seed=SEED
+    )
+    return train_generator, val_generator, test_generator
+    # ── YOUR CODE ENDS HERE ───────────────────────────────────────────────
+    
 
 # ── TODO 2 ───────────────────────────────────────────────────────────────────
 def get_tf_datasets(
