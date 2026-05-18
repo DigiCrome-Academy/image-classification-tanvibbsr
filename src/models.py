@@ -49,6 +49,22 @@ def build_baseline_mlp(
         Compiled keras.Model
     """
     # ── YOUR CODE STARTS HERE ─────────────────────────────────────────────
+    #Flatten the input images
+    model = keras.Sequential([
+        layers.Input(shape=input_shape),
+        layers.Flatten(),
+        layers.Dense(512, activation=activation),
+        layers.Dense(256, activation=activation),
+        layers.Dense(128, activation=activation),
+        layers.Dense(num_classes, activation='sigmoid')
+    ])
+    #Compile the model
+    model.compile(
+        optimizer=optimizer if isinstance(optimizer, str) else optimizer(learning_rate=learning_rate),
+        loss='binary_crossentropy',
+        metrics=['accuracy']
+    )
+    return model
     raise NotImplementedError("TODO 4: implement build_baseline_mlp()")
     # ── YOUR CODE ENDS HERE ───────────────────────────────────────────────
 
