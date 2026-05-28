@@ -106,7 +106,27 @@ def build_advanced_nn(
         Compiled keras.Model
     """
     # ── YOUR CODE STARTS HERE ─────────────────────────────────────────────
-    raise NotImplementedError("TODO 5: implement build_advanced_nn()")
+    inputs = layers.Input(shape=input_shape)
+    x = layers.Flatten()(inputs)
+    x = layers.Dense(512, activation='relu', kernel_regularizer=regularizers.l2(l2_lambda))(x)
+    x = layers.BatchNormalization()(x)
+    x = layers.Dropout(dropout_rate)(x)
+    x = layers.Dense(256, activation='relu', kernel_regularizer=regularizers.l2(l2_lambda))(x)
+    x = layers.BatchNormalization()(x)
+    x = layers.Dropout(dropout_rate)(x)
+    x = layers.Dense(128, activation='relu', kernel_regularizer=regularizers.l2(l2_lambda))(x)
+    x = layers.BatchNormalization()(x)
+    x = layers.Dropout(dropout_rate)(x)
+    outputs = layers.Dense(1, activation='sigmoid')(x)
+    model = keras.Model(inputs=inputs, outputs=outputs)
+    model.compile(
+        optimizer=keras.optimizers.Adam(learning_rate=learning_rate, clipnorm=1.0),
+        loss='binary_crossentropy',
+        metrics=['accuracy', keras.metrics.AUC()]
+    )
+    return model
+
+
     # ── YOUR CODE ENDS HERE ───────────────────────────────────────────────
 
 
@@ -153,7 +173,33 @@ def build_transfer_model(
         Compiled keras.Model
     """
     # ── YOUR CODE STARTS HERE ─────────────────────────────────────────────
-    raise NotImplementedError("TODO 6: implement build_transfer_model()")
+    if base_model_name == "VGG16":
+        base_model = keras.applications.VGG16(
+            include_top=False, weights='imagenet', input_shape=input_shape)
+    elif base_model_name == "ResNet50":
+        base_model = keras.applications.ResNet50(
+            include_top=False, weights='imagenet', input_shape=input_shape)
+    elif base_model_name == "MobileNetV2":
+        base_model = keras.applications.MobileNetV2(
+            include_top=False, weights='imagenet', input_shape=input_shape)
+    else:
+        raise ValueError(f"Unsupported base model: {base_model_name}")
+    if freeze_base:
+        base_model.trainable = False
+    inputs = layers.Input(shape=input_shape)
+    x = base_model(inputs, training=not freeze_base)
+    x = layers.GlobalAveragePooling2D()(x)
+    x = layers.Dense(256, activation='relu')(x)
+    x = layers.BatchNormalization()(x)
+    x = layers.Dropout(dropout_rate)(x)
+    outputs = layers.Dense(1, activation='sigmoid')(x)
+    model = keras.Model(inputs=inputs, outputs=outputs)
+    model.compile(
+        optimizer=keras.optimizers.Adam(learning_rate=learning_rate),
+        loss='binary_crossentropy',
+        metrics=['accuracy', keras.metrics.AUC()]
+    )
+    return model
     # ── YOUR CODE ENDS HERE ───────────────────────────────────────────────
 
 
@@ -177,7 +223,28 @@ def unfreeze_top_layers(model: keras.Model, num_layers: int = 20) -> keras.Model
         Re-compiled keras.Model
     """
     # ── YOUR CODE STARTS HERE ─────────────────────────────────────────────
-    raise NotImplementedError("TODO 7: implement unfreeze_top_layers()")
+    #unfreeze the last `num_layers` of the base model for fine-tuning
+        # Locate the base model layer inside `model`
+    base_model = None
+    for layer in model.layers:
+        if isinstance(layer, keras.Model) and len(layer.layers) > 50:  # Heuristic for base model
+            base_model = layer
+            break
+    if base_model is None:
+        raise ValueError("Base model not found in the provided model.")
+    # Freeze all layers except the last `num_layers` of that sub-model
+    for layer in base_model.layers[:-num_layers]:
+        layer.trainable = False
+    for layer in base_model.layers[-num_layers:]:
+        layer.trainable = True
+    # Recompile the model with Adam(1e-5) and the same loss/metrics
+    model.compile(
+        optimizer=keras.optimizers.Adam(learning_rate=1e-5),
+        loss=model.loss,
+        metrics=model.metrics
+    )
+    return model
+  
     # ── YOUR CODE ENDS HERE ───────────────────────────────────────────────
 
 
@@ -206,5 +273,17 @@ def build_ensemble(models: list, input_shape: tuple = (224, 224, 3)) -> keras.Mo
         keras.Model (not compiled — outputs averaged probability)
     """
     # ── YOUR CODE STARTS HERE ─────────────────────────────────────────────
-    raise NotImplementedError("TODO 8: implement build_ensemble()")
+    # Freeze all layers in each model
+    for model in models:
+        model.trainable = False
+    # Create a shared Input layer
+    ensemble_input = layers.Input(shape=input_shape)
+    # Pass the input through each model to get its probability output
+    model_outputs = [model(ensemble_input) for model in models]
+    # Average the outputs
+    averaged_output = layers.Average()(model_outputs)
+    # Return the ensemble Model
+    ensemble_model = keras.Model(inputs=ensemble_input, outputs=averaged_output)
+    return ensemble_model
+  
     # ── YOUR CODE ENDS HERE ───────────────────────────────────────────────

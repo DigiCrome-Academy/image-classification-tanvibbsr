@@ -64,7 +64,7 @@ def get_callbacks(
         log_dir=f"logs/{model_name}/",
     )
     return [get_checkpoint, get_early_stopping, get_reduce_lr, get_tensorboard]
-    raise NotImplementedError("TODO 9: implement get_callbacks()")
+    
     # ── YOUR CODE ENDS HERE ───────────────────────────────────────────────
 
 
