@@ -43,7 +43,28 @@ def get_callbacks(
     """
     checkpoint_dir.mkdir(parents=True, exist_ok=True)
     # ── YOUR CODE STARTS HERE ─────────────────────────────────────────────
-    raise NotImplementedError("TODO 9: implement get_callbacks()")
+    #Build the required callbacks as specified in the docstring.
+    get_checkpoint = keras.callbacks.ModelCheckpoint(
+        filepath=checkpoint_dir / f"{model_name}_best.keras",
+        save_best_only=True,
+        monitor=monitor,
+    )
+    get_early_stopping = keras.callbacks.EarlyStopping(
+        monitor=monitor,
+        patience=patience,
+        restore_best_weights=True,
+    )
+    get_reduce_lr = keras.callbacks.ReduceLROnPlateau(
+        monitor=monitor,
+        factor=0.5,
+        patience=patience // 2,
+        min_lr=1e-7,
+    )
+    get_tensorboard = keras.callbacks.TensorBoard(
+        log_dir=f"logs/{model_name}/",
+    )
+    return [get_checkpoint, get_early_stopping, get_reduce_lr, get_tensorboard]
+    
     # ── YOUR CODE ENDS HERE ───────────────────────────────────────────────
 
 
@@ -71,7 +92,31 @@ def get_lr_schedule(
         keras.callbacks.LearningRateScheduler
     """
     # ── YOUR CODE STARTS HERE ─────────────────────────────────────────────
-    raise NotImplementedError("TODO 10: implement get_lr_schedule()")
+    def step_decay(epoch):
+        drop = 0.5
+        epochs_drop = 10
+        lr = initial_lr * (drop ** (epoch // epochs_drop))
+        return lr
+    def cosine_annealing(epoch):
+        cosine_decay = 0.5 * (1 + tf.math.cos(tf.constant(epoch) * 3.14159265 / epochs))
+        lr = initial_lr * cosine_decay
+        return lr
+    def warmup_cosine(epoch):   
+        if epoch < 5:
+            lr = initial_lr * (epoch / 5)
+        else:
+            cosine_decay = 0.5 * (1 + tf.math.cos(tf.constant(epoch - 5) * 3.14159265 / (epochs - 5)))
+            lr = initial_lr * cosine_decay
+        return lr
+    if schedule_type == "step":
+        return keras.callbacks.LearningRateScheduler(step_decay)    
+    elif schedule_type == "cosine":
+        return keras.callbacks.LearningRateScheduler(cosine_annealing)
+    elif schedule_type == "warmup":
+        return keras.callbacks.LearningRateScheduler(warmup_cosine)
+    else:
+        raise ValueError(f"Unsupported schedule_type: {schedule_type}")
+
     # ── YOUR CODE ENDS HERE ───────────────────────────────────────────────
 
 
@@ -104,6 +149,14 @@ def train_model(
         keras.callbacks.History
     """
     # ── YOUR CODE STARTS HERE ─────────────────────────────────────────────
+    history = model.fit(
+        train_data,
+        validation_data=val_data,
+        epochs=epochs,
+        class_weight=class_weights,
+        callbacks=callbacks,
+    )
+    return history
     raise NotImplementedError("TODO 11: implement train_model()")
     # ── YOUR CODE ENDS HERE ───────────────────────────────────────────────
 
